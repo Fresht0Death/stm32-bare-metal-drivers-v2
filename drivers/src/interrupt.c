@@ -130,5 +130,3 @@ void usart2_interrupt_init(void)
 
 }
 /* /\ End of function definitions /\ */
-
-
