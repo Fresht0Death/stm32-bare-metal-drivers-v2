@@ -60,5 +60,6 @@ my_err_t tim_pwm_init(PWMHandle *pwmTimer);
 my_err_t pwm_set_frequency(PWMHandle *pwmTimer, uint32_t Prescaler, uint32_t Arr);
 
 
+my_err_t pwm_set_duty_ticks(PWMHandle *pwmTimer, uint32_t duty_ticks);
 
 #endif /* PWM_H_ */
