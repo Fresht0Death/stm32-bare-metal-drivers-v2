@@ -5,12 +5,24 @@
  *      Author: Freshmai
  */
 
+/* \/  Start of libraries \/ */
 
 #include "stm32f4xx.h"
 #include <stdio.h>
 #include "gpio.h"
+/* /\  End of libraries /\ */
 
+/* \/  Start of function definitions \/ */
 
+/*======================================*
+ * 										*
+ * Name: gpioa_enable					*
+ *  @args: void							*
+ *  @param: void						*
+ *  @brief: enable clock access to 		*
+ *  		GPIOA						*
+ * 										*
+ *======================================*/
 void gpioa_enable(void)
 {
 
@@ -19,9 +31,15 @@ void gpioa_enable(void)
 }
 
 
-
-
-
+/*======================================*
+ * 										*
+ * Name: gpioa_set_mode					*
+ *  @args: uint8_t, uint8_t				*
+ *  @param: void						*
+ *  @brief: set the mode of any pin		*
+ *  		in GPIOA					*
+ * 										*
+ *======================================*/
 void gpioa_set_mode(uint8_t mode, uint8_t pin)
 {
 
@@ -88,6 +106,15 @@ void gpioa_set_mode(uint8_t mode, uint8_t pin)
 }
 
 
+
+/*======================================*
+ * 										*
+ * Name: toggle_pa5_led					*
+ *  @args: void							*
+ *  @param: void						*
+ *  @brief: toggles the on-board led		*
+ * 										*
+ *======================================*/
 void toggle_pa5_led(void)
 {
 	gpioa_enable();
@@ -99,10 +126,20 @@ void toggle_pa5_led(void)
 }
 
 
-void shit_delay(void)
+/*======================================*
+ * 										*
+ * Name: delay							*
+ *  @args: void							*
+ *  @param: void						*
+ *  @brief: starts a blocking delay		*
+ * 										*
+ *======================================*/
+void delay(void)
 {
 
 	for(int i = 0; i < 1000000; i++);
 
 
 }
+/* /\  End of function definitions /\ */
+
