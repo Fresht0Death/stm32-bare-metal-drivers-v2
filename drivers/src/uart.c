@@ -5,13 +5,16 @@
  *      Author: Freshmai
  */
 
-
+/* \/ Start of libraries \/' */
 
 #include "stm32f4xx.h"
 #include <stdio.h>
+#include "stm_err.h"
+/* /\ End of libraries /\  */
 
 
-/* \/ Defining Macros \/ */
+/* \/ Start of  Macros definitions \/ */
+
 // Enable clock access to USART2
 #define RCCAPB1USART2EN				(1U<<17)
 
@@ -42,7 +45,6 @@
 
 // Enable clock access to APB2
 #define RCCAPB2USART1EN				(1U<<4)
-
 /* /\ End of Macros definition /\ */
 
 
@@ -50,10 +52,10 @@
 
 /*===========================================*
  *      						             * USART[1,2,3,6]
- * 	Function Name: set_usart_baudrate        * UART [4,5]
- * 		Args: int ,int ,uint8_t              *
- *  	Return type: void                    *
- *  	Purpose: set the baudrate for usart  *
+ * 	Name: set_usart_baudrate        		 * UART [4,5]
+ * 		@args: int ,int ,uint8_t             *
+ *  	@param: void	                     *
+ *  	@brief: set the baudrate for usart   *
  *  	based on the periph clock speed,     *
  *  	user desired baudrate, and which     *
  *  	usart is being used		             *
@@ -123,10 +125,10 @@ void set_usart_baudrate(int baudrate, int periph_clk, uint8_t usartNumber)
 
 /*======================================*
  *      						        *
- * 	Function Name: usart2_write         *
- * 		Args: int                       *
- *  	Return type: int                *
- *  	Purpose: transmit char passed   *
+ * 	Name: usart2_write         			*
+ * 		@args: int                      *
+ *  	@param: int                     *
+ *  	@brief: transmit char passed    *
  *  	by user to terminal 			*
  *      						        *
  *======================================*/
@@ -144,10 +146,10 @@ int usart2_write(int chr)
 
 /*======================================*
  *      						        *
- * 	Function Name: usart2_read          *
- * 		Args: void                      *
- *  	Return type: int                *
- *  	Purpose: read input from        *
+ * 	Name: usart2_read      		        *
+ * 		@args: void                     *
+ *  	@param: int                     *
+ *  	@brief: read input from         *
  *      the terminal					*
  *      						        *
  *======================================*/
@@ -164,10 +166,10 @@ int usart2_read(void)
 
 /*======================================*
  *      						        *
- * 	Function Name: usart2_init          *
- * 		Args: void                      * PA2: USART2_TX, AFR[8,11] = AF7
- *  	Return type: void               * PA3: USART2_RX, AFR[12,15] = AF7
- *  	Purpose: grants access to the   *
+ * 	Name: usart2_init          			*
+ * 		@args: void                     * PA2: USART2_TX, AFR[8,11] = AF7
+ *  	@param: void               	    * PA3: USART2_RX, AFR[12,15] = AF7
+ *  	@brief: grants access to the   *
  *  	clock for usart2 and GPIOA,     *
  *  	sets up gpio pins(PA2 and PA3)  *
  *  	for alt func mode to be used    *
@@ -175,7 +177,7 @@ int usart2_read(void)
  *  	sets baudrate to 115200			*
  *      								*
  *======================================*/
-void usart2_init(void)
+my_err_t usart2_init(void)
 {
 
 	// usart2_init rx code
@@ -229,15 +231,17 @@ void usart2_init(void)
 		// Setting usart2 baudrate
 		set_usart_baudrate(BAUDRATE, APB1_16MHZ, 2);
 
+		return MY_OK;
+
 }
 
 
 /*=======================================*
  *      						         *
- * 	Function Name: __io_putchar          *
- * 		Args: int                        *
- *  	Return type: int                 *
- *  	Purpose: we overwrite the C      *
+ * 	Name: __io_putchar          		 *
+ * 		@args: int                       *
+ *  	@param: int                 	 *
+ *  	@brief: we overwrite the C       *
  *  	function for printing to the     *
  *  	terminal with our usart2_write() *
  *  	function and then we return what *
@@ -256,10 +260,10 @@ int __io_putchar(int ch)
 
 /*=======================================*
  *      						         *
- * 	Function Name: __io_getchar          *
- * 		Args: void                       *
- *  	Return type: int                 *
- *  	Purpose: we overwrite the C      *
+ * 	Name: __io_getchar          		 *
+ * 		@args: void                      *
+ *  	@param: int                 	 *
+ *  	@brief: we overwrite the C       *
  *  	function for getting input from  *
  *  	the terminal with our            *
  *  	function and then we return what *
@@ -290,10 +294,10 @@ int __io_getchar(void)
 
 /*=======================================*
  *      						         *
- * 	Function Name: read_line             *
- * 		Args: char*, int                 *
- *  	Return type: void                *
- *  	Purpose: this our own scanf  	 *
+ * 	Name: read_line             		 *
+ * 		@args: char*, int                *
+ *  	@param: void                	 *
+ *  	@brief: this our own scanf  	 *
  *      type function used to read input *
  *      from the user and echo it        *
  *      								 *
@@ -338,10 +342,10 @@ void read_line(char *buffer, int max_len)
 
 /*=======================================*
  *      						         *
- * 	Function Name: usart1_tx_init        *
- * 		Args: void                       *
- *  	Return type: void                *
- *  	Purpose: initialize usart1 for   *
+ * 	Name: usart1_tx_init        		 *
+ * 		@args: void                      *
+ *  	@param: void                	 *
+ *  	@brief: initialize usart1 for   *
  *  	transmission					 *
  *      								 *
  *=======================================*/
@@ -384,10 +388,10 @@ void usart1_tx_init(void)
 
 /*======================================*
  *      						        *
- * 	Function Name: usart1_write         *
- * 		Args: int                       *
- *  	Return type: int                *
- *  	Purpose: transmit char passed   *
+ * 	Name: usart1_write         		    *
+ * 		@args: int                      *
+ *  	@param: int                		*
+ *  	@brief: transmit char passed    *
  *  	by user to terminal 			*
  *      						        *
  *======================================*/
@@ -402,7 +406,6 @@ int usart1_write(int chr)
 	return chr;
 
 }
-
 /*/\ End of function definitions /\ */
 
 
