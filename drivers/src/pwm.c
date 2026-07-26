@@ -96,10 +96,7 @@ my_err_t tim_pwm_init(PWMHandle *pwmTimer)
 	{
 		return MY_ERR_BAD_ARG;
 	}
-	if(prescaler_div == 0 || period_ticks == 0)
-	{
-		return MY_ERR_BAD_ARG;
-	}
+
 
 	if(pwmTimer->pwminstance == TIM1)
 	{
@@ -197,5 +194,22 @@ void pwm_set_tim8_duty_cycle(uint16_t duty)
 
 
 }
-/* /\ End of function definitions /\ */
 
+my_err_t pwm_set_duty_ticks(PWMHandle *pwmTimer, uint32_t duty_ticks)
+{
+    if(pwmTimer == NULL || pwmTimer->pwminstance == NULL)
+    {
+        return MY_ERR_BAD_ARG;
+    }
+
+    if(duty_ticks > pwmTimer->pwminstance->ARR)
+    {
+        duty_ticks = pwmTimer->pwminstance->ARR;
+    }
+
+    pwmTimer->pwminstance->CCR1 = duty_ticks;
+    pwmTimer->pwmDutyCycle = duty_ticks;
+
+    return MY_OK;
+}
+/* /\ End of function definitions /\ */
