@@ -5,11 +5,13 @@
  *      Author: Freshmai
  */
 
+/* \/  Start of libraries \/ */
 
 #include "stm32f4xx.h"
 #include "gpio.h"
 #include "timer.h"
 #include <stddef.h>
+/* /\  End of libraries /\ */
 
 
 /* \/ Start of Macro definitons \/ */
@@ -160,16 +162,14 @@ TimerHandle TIMER_14 = {
 
 /* \/ Start of function definitions \/ */
 
-/*===========================*
- * 							 *
- * Name: systick_init		 *
- * 	Args: void				 *
- * 	Returns: void			 *
- * 		Purpose: initialize	 *
- * 		SysTick timer for	 *
- * 		counting			 *
- * 		 					 *
- *===========================*/
+/*======================================*
+ * 										*
+ * Name: systick_init					*
+ *  @args: void							*
+ *  @param: void						*
+ *  @brief: initialize systick			*
+ * 										*
+ *======================================*/
 void systick_init(void)
 {
 	SysTick->CTRL |= ENPROCESSORCLK;
@@ -178,19 +178,18 @@ void systick_init(void)
 }
 
 
-/*===============================*
- * 								 *
- * Name: systick_delay_ms		 *
- * 	Args: uint32_t				 *
- * 	Returns: uint8_t			 *
- *  	Purpose: Initializes     *
- *  	Systick to start a timer *
- *  	which is defined by the  *
- *  	user based on how many   *
- *  	millisecs. they want for *
- *  	a blocking delay.    	 *
- * 								 *
- *===============================*/
+/*======================================*
+ * 										*
+ * Name: systick_delay_ms				*
+ *  @args: uint32_t						*
+ *  @param: uint8_t for when timer is   *
+ *  		done						*
+ *  @brief: initialize systick and 		*
+ *  		start the timer based on	*
+ *  		the length the user 		*
+ *  		passes through in ms		*
+ * 										*
+ *======================================*/
 uint8_t systick_delay_ms(uint32_t delay_ms)
 {
 
@@ -213,20 +212,18 @@ uint8_t systick_delay_ms(uint32_t delay_ms)
 }
 
 
-/*===========================*
- * 							 *
- * Name: timer_init		 	 *
- * 	Args: TimerHandle*		 * APB1 timers: 2, 3, 4, 5, 12, 13, 14
- * 	Returns: void			 * APB2 timers: 1, 8, 9, 10, 11
- * 		Purpose: initialize	 *
- * 		timer by giving the  *
- * 		the timer access to  *
- * 		the clock, set PSC,  *
- * 		force update gen.,   *
- * 		reset timer, and     *
- * 		clear update flag    *
- * 		 					 *
- *===========================*/
+/*==========================================*
+ * 											*
+ * Name: timer_init							* APB1 timers: 2, 3, 4, 5, 12, 13, 14
+ *  @args: TimerHandle*						* APB2 timers: 1, 8, 9, 10, 11
+ *  @param: void							*
+ *  @brief: initialize timer by giving 		*
+ *  		the timer access to the 		*
+ *  		clock, set PSC, force update	*
+ *  		gen., reset timer, and      	*
+ * 			clear update flag 		 		*
+ * 											*
+ *==========================================*/
 void timer_init(TimerHandle *timer)
 {
 
@@ -285,9 +282,9 @@ void timer_init(TimerHandle *timer)
 /*==========================================*
  * 							 	     		*
  * Name: startTimer  		         		*
- * 	Args: uint32_t , TimerHandle*    		*
- * 	Returns: void			 	     		*
- * 		Purpose: start the specified 		*
+ * 	@args: uint32_t , TimerHandle*    		*
+ * 	@param: void			 	     		*
+ * 	@brief: start the specified 			*
  * 		timer for counting based	 		*
  * 		on the amount of time given 		*
  * 		by the user and the specific timer  *
@@ -345,9 +342,9 @@ uint8_t startTimer(uint32_t durationMs, TimerHandle *timer)
 /*==========================================*
  * 							 	     		*
  * Name: check_timer_flag            		*
- * 	Args: TimerHandle*  			  		*
- * 	Returns: uint8_t		 	     		*
- * 		Purpose: start the specified 		*
+ * 	@args: TimerHandle*  			  		*
+ * 	@param: uint8_t		 	     			*
+ * 	@brief: start the specified 			*
  * 		timer for counting based	 		*
  * 		on the amount of time given 		*
  * 		by the user and the specific timer  *
@@ -375,3 +372,4 @@ uint8_t check_timer_flag(TimerHandle *timer)
 	}
 }
 /* /\ End of function definitions /\ */
+
