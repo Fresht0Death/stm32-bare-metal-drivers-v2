@@ -17,6 +17,7 @@
  */
 
 
+
 // libraries
 #include <stdint.h>
 #include "stm32f4xx.h"
@@ -31,15 +32,9 @@
 #include "stm_err.h"
 
 // Macros
-#define TIM_UIF					(1U<<0)
 #define USART_RXNE				(1U<<5)
 #define MAX_BUFFER_RX_LEN		(10)
 #define ADCEOC					(1U<<1)
-#define maxDuty 				(65535) //0–65535 for 16 bit
-#define TIM8EN					(1U<<1)
-#define TIM1EN					(1U<<0)
-uint32_t prevTIMARRValue = 0;
-uint32_t adc2_scaled_val = 0;
 
 
 
@@ -58,10 +53,6 @@ volatile uint32_t sampleCount = 0;
 
 
 
-// Function prototype
-void pulse_led(void);
-uint32_t scale_adc_to_pwm(uint32_t adc_value, uint32_t adc_max, uint32_t pwm_max);
-void potentiometer_led(PWMHandle* timer);
 
 int main(void)
 {
@@ -119,37 +110,6 @@ int main(void)
 }
 
 
-void EXTI15_10_IRQHandler(void)
-{
-	// Check if the EXTI13 caused the interrupt
-	if(EXTI->PR & EXTI_PR_PR13)
-	{
-
-		// Do something
-		toggle_pa5_led();
-
-		// Clear flag
-		EXTI->PR = EXTI_PR_PR13;
-
-	}
-
-}
-
-void TIM2_IRQHandler(void)
-{
-	// Check if UIF flag has been
-	if(TIM2->SR & TIM_UIF)
-	{
-
-		// Do something
-		toggle_pa5_led();
-
-		// Clear flag
-		TIM2->SR &=~ TIM_UIF;
-
-	}
-
-}
 
 void USART2_IRQHandler(void)
 {
@@ -183,112 +143,6 @@ void ADC_IRQHandler(void)
 
 	}
 }
-
-void pulse_led(void)
-{
-	for(int i = 0; i < 2000; i++)
-		{
-		pwm_set_tim8_duty_cycle(i);
-		printf("%d\r\n", i);
-		}
-	for(int i = 2000; i > 0; i--)
-		{
-		pwm_set_tim8_duty_cycle(i);
-		printf("%d\r\n", i);
-		}
-
-
-
-}
-
-
-void potentiometer_led(PWMHandle* timer)
-{
-	if(timer->pwminstance == TIM1)
-	{
-		if((RCC->APB2ENR & TIM1EN) == 0)
-		{
-			adc2_scaled_val = (uint32_t)(((uint64_t)(adc2_raw_value * prevTIMARRValue)) / 4095U);
-		}
-		else
-		{
-			adc2_scaled_val = (uint32_t)(((uint64_t)(adc2_raw_value * TIM1->ARR)) / 4095U);
-
-		}
-
-	}
-	else if(timer->pwminstance == TIM8)
-	{
-		if((RCC->APB2ENR & TIM8EN) == 0 )
-		{
-			adc2_scaled_val = (uint32_t)(((uint64_t)(adc2_raw_value * prevTIMARRValue)) / 4095U);
-		}
-		else
-		{
-			adc2_scaled_val = (uint32_t)(((uint64_t)(adc2_raw_value * timer->pwminstance->ARR)) / 4095U);
-
-		}
-
-	}
-
-	if(adc2_interrupt_flag != 0)
-	{
-		if(adc2_scaled_val < 18)
-		{
-
-			if(timer->pwminstance->ARR != 0)
-			{
-				prevTIMARRValue = timer->pwminstance->ARR;
-			}
-
-			if(timer->pwminstance == TIM1)
-			{
-				// Disable clock access to TIM1
-				RCC->APB2ENR &=~ TIM1EN;
-			}
-			else if(timer->pwminstance == TIM8)
-			{
-				// Disable clock access to TIM8
-				RCC->APB2ENR &=~ TIM8EN;
-			}
-
-
-			adc2_interrupt_flag = 0;
-
-
-			// stabilization delay
-			for(int i = 0; i < 4200; i++);
-
-		}
-		else
-		{
-
-			if(timer->pwminstance == TIM1)
-			{
-				// Disable clock access to TIM1
-				RCC->APB2ENR |= TIM1EN;
-			}
-			else if(timer->pwminstance == TIM8)
-			{
-				// Disable clock access to TIM8
-				RCC->APB2ENR |= TIM8EN;
-			}
-
-
-			timer->pwminstance->CCR1 = adc2_scaled_val;
-
-			//pwm_set_tim8_duty_cycle(adc2_scaled_val);
-
-			adc2_interrupt_flag = 0;
-
-
-		}
-
-	}
-
-
-}
-
 
 
 
