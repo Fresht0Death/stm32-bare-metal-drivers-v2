@@ -119,5 +119,3 @@ uint8_t check_timer_flag(TimerHandle *timer);
 
 #endif /* TIMER_H_ */
 
-
-#endif /* TIMER_H_ */

@@ -17,6 +17,7 @@
  */
 
 
+
 // libraries
 #include <stdint.h>
 #include "stm32f4xx.h"
@@ -30,287 +31,56 @@
 #include "pwm.h"
 #include "stm_err.h"
 
-// Macros
-#define TIM_UIF					(1U<<0)
-#define USART_RXNE				(1U<<5)
-#define MAX_BUFFER_RX_LEN		(10)
-#define ADCEOC					(1U<<1)
-#define maxDuty 				(65535) //0–65535 for 16 bit
-#define TIM8EN					(1U<<1)
-#define TIM1EN					(1U<<0)
-uint32_t prevTIMARRValue = 0;
-uint32_t adc2_scaled_val = 0;
+#include <stdint.h>
+#include <stdio.h>
 
+#include "stm32f4xx.h"
+#include "adc.h"
+#include "gpio.h"
+#include "stm_err.h"
+#include "uart.h"
 
-
-// Const tags
-const char* TIM1_PWM_INIT_TAG   = "TIM1 PWM init";
-const char* TIM8_PWM_INIT_TAG  = "TIM8 PWM init";
-const char* USART2_INIT_TAG 	= "USART2 init";
-
-// Force the compiler to check memory every time using volatile
-volatile char letters[MAX_BUFFER_RX_LEN];
-volatile uint8_t rx_index = 0;      // ISR uses this to write
-volatile uint8_t tx_index = 0;      // Main loop uses this to read
-volatile uint32_t adc2_raw_value = 0;
-volatile uint8_t adc2_interrupt_flag = 0;
-volatile uint32_t sampleCount = 0;
-
-
-
-// Function prototype
-void pulse_led(void);
-uint32_t scale_adc_to_pwm(uint32_t adc_value, uint32_t adc_max, uint32_t pwm_max);
-void potentiometer_led(PWMHandle* timer);
+static volatile uint32_t adc2_raw_value;
+static volatile uint8_t adc2_sample_ready;
 
 int main(void)
 {
+    my_err_t uart_status = usart2_init();
+    printf("USART2 init: %s\r\n", my_err_to_name(uart_status));
 
+    adc2_pa4_interrupt_continuous_init();
+    __enable_irq();
 
-
-
-	my_err_t usart2_init_status = usart2_init();
-	const char* usart2_init_char = my_err_to_name(usart2_init_status);
-	printf("%s: %s\r\n", USART2_INIT_TAG, usart2_init_char);
-
-
-
-	adc2_pa4_interrupt_continuous_init();
-
-
-
-
-	// enable global interrupts
-	__enable_irq();
-
-    uint32_t voltage_integer_part = 0;
-    uint32_t voltage_decimal_part = 0;
-
-
-
-
-
-
-	printf("Hello while-d world!\r\n");
-	while(1)
-	{
-
-
-
-
-	    if(adc2_interrupt_flag != 0)
-	    {
-	    	delay();
-
-		    printf("ADC2 value: %ld\r\n", adc2_raw_value);
-
-
-	    	voltage_integer_part = adc_to_voltage5V_integer_part(adc2_raw_value);
-	    	voltage_decimal_part = adc_to_voltage5V_decimal_part(adc2_raw_value);
-
-		    printf("ADC2 Voltage: %ld.%ld\r\n", voltage_integer_part, voltage_decimal_part);
-
-		    adc2_interrupt_flag = 0;
-
-
-	    }
-
-		if(adc2_interrupt_flag != 0)
-		{
-			printf("ADC raw value: %ld\r\n", adc2_raw_value);
-			printf("ADC sample number: %ld\r\n", sampleCount);
-
-			adc2_interrupt_flag = 0;
-
-			delay();
-
-
-
-
-		}
-
-
-	}
-
-
-
-    return 0;
-
-
-}
-
-
-void EXTI15_10_IRQHandler(void)
-{
-	// Check if the EXTI13 caused the interrupt
-	if(EXTI->PR & EXTI_PR_PR13)
-	{
-
-		// Do something
-		toggle_pa5_led();
-
-		// Clear flag
-		EXTI->PR = EXTI_PR_PR13;
-
-	}
-
-}
-
-void TIM2_IRQHandler(void)
-{
-	// Check if UIF flag has been
-	if(TIM2->SR & TIM_UIF)
-	{
-
-		// Do something
-		toggle_pa5_led();
-
-		// Clear flag
-		TIM2->SR &=~ TIM_UIF;
-
-	}
-
-}
-
-void USART2_IRQHandler(void)
-{
-    // Check if the receive flag has been set
-    if(USART2->SR & USART_RXNE)
+    while (1)
     {
-        // Read DR to clear the flag and store the byte
-        letters[rx_index] = USART2->DR;
-
-        // Advance write index and wrap around at 10
-        rx_index++;
-        if(rx_index >= MAX_BUFFER_RX_LEN)
+        if (adc2_sample_ready != 0U)
         {
-            rx_index = 0;
+            uint32_t raw_value = adc2_raw_value;
+            adc2_sample_ready = 0U;
+
+            delay();
+
+            uint32_t voltage_integer_part =
+                adc_to_voltage5V_integer_part(raw_value);
+            uint32_t voltage_decimal_part =
+                adc_to_voltage5V_decimal_part(raw_value);
+
+            printf("ADC2 value: %lu\r\n", (unsigned long)raw_value);
+            printf("ADC2 voltage: %lu.%03lu V\r\n",
+                   (unsigned long)voltage_integer_part,
+                   (unsigned long)voltage_decimal_part);
         }
     }
 }
 
 void ADC_IRQHandler(void)
 {
-	// Check if the end of conversion has been set
-	if (ADC2->SR & ADCEOC)
-	{
-		// Read current digital voltage and clears EOC flag
-		adc2_raw_value = ADC2->DR;
-
-		// set flag that interrupt has occurred
-		adc2_interrupt_flag = 1;
-
-		sampleCount++;
-
-	}
+    if ((ADC2->SR & ADC_SR_EOC) != 0U)
+    {
+        adc2_raw_value = ADC2->DR;
+        adc2_sample_ready = 1U;
+    }
 }
-
-void pulse_led(void)
-{
-	for(int i = 0; i < 2000; i++)
-		{
-		pwm_set_tim8_duty_cycle(i);
-		printf("%d\r\n", i);
-		}
-	for(int i = 2000; i > 0; i--)
-		{
-		pwm_set_tim8_duty_cycle(i);
-		printf("%d\r\n", i);
-		}
-
-
-
-}
-
-
-void potentiometer_led(PWMHandle* timer)
-{
-	if(timer->pwminstance == TIM1)
-	{
-		if((RCC->APB2ENR & TIM1EN) == 0)
-		{
-			adc2_scaled_val = (uint32_t)(((uint64_t)(adc2_raw_value * prevTIMARRValue)) / 4095U);
-		}
-		else
-		{
-			adc2_scaled_val = (uint32_t)(((uint64_t)(adc2_raw_value * TIM1->ARR)) / 4095U);
-
-		}
-
-	}
-	else if(timer->pwminstance == TIM8)
-	{
-		if((RCC->APB2ENR & TIM8EN) == 0 )
-		{
-			adc2_scaled_val = (uint32_t)(((uint64_t)(adc2_raw_value * prevTIMARRValue)) / 4095U);
-		}
-		else
-		{
-			adc2_scaled_val = (uint32_t)(((uint64_t)(adc2_raw_value * timer->pwminstance->ARR)) / 4095U);
-
-		}
-
-	}
-
-	if(adc2_interrupt_flag != 0)
-	{
-		if(adc2_scaled_val < 18)
-		{
-
-			if(timer->pwminstance->ARR != 0)
-			{
-				prevTIMARRValue = timer->pwminstance->ARR;
-			}
-
-			if(timer->pwminstance == TIM1)
-			{
-				// Disable clock access to TIM1
-				RCC->APB2ENR &=~ TIM1EN;
-			}
-			else if(timer->pwminstance == TIM8)
-			{
-				// Disable clock access to TIM8
-				RCC->APB2ENR &=~ TIM8EN;
-			}
-
-
-			adc2_interrupt_flag = 0;
-
-
-			// stabilization delay
-			for(int i = 0; i < 4200; i++);
-
-		}
-		else
-		{
-
-			if(timer->pwminstance == TIM1)
-			{
-				// Disable clock access to TIM1
-				RCC->APB2ENR |= TIM1EN;
-			}
-			else if(timer->pwminstance == TIM8)
-			{
-				// Disable clock access to TIM8
-				RCC->APB2ENR |= TIM8EN;
-			}
-
-
-			timer->pwminstance->CCR1 = adc2_scaled_val;
-
-			//pwm_set_tim8_duty_cycle(adc2_scaled_val);
-
-			adc2_interrupt_flag = 0;
-
-
-		}
-
-	}
-
-
-}
-
-
 
 
 
